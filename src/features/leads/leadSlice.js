@@ -9,7 +9,7 @@ export const getLeadsContent = createAsyncThunk('/leads/content', async () => {
 })
 
 export const leadsSlice = createSlice({
-    name: 'leads',
+    name: '`leads`',
     initialState: {
         isLoading: false,
         leads : []

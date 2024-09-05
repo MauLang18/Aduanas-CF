@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
 import axios from 'axios';
+import { jwtDecode } from 'jwt-decode';
 import LandingIntro from './LandingIntro';
 import ErrorText from '../../components/Typography/ErrorText';
 import InputText from '../../components/Input/InputText';
@@ -25,16 +25,27 @@ function Login() {
         try {
             setLoading(true);
 
-            // Hacer la petición POST al API para el login
             const response = await axios.post('http://localhost:5218/api/Auth/Login?authType=Interno', {
                 correo: loginObj.emailId,
                 pass: loginObj.password
             });
 
             if (response.data.isSuccess) {
-                // Guardar token en localStorage
-                localStorage.setItem("token", response.data.token);
-                window.location.href = '/app/dashboard';
+                const token = response.data.data;
+
+                const decodedToken = jwtDecode(token);
+
+                const givenName = decodedToken.given_name;
+                const typ = decodedToken.typ;
+
+                console.log(givenName, typ)
+
+                if ((givenName === "1" || givenName === "3") && typ.includes("11")) {
+                    localStorage.setItem("token", token);
+                    window.location.href = '/app/dashboard';
+                } else {
+                    setErrorMessage('Invalid user credentials. Access denied.');
+                }
             } else {
                 setErrorMessage(response.data.message || 'Invalid credentials');
             }
