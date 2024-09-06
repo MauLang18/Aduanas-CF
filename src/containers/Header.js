@@ -100,7 +100,7 @@ function Header() {
           <div className="dropdown dropdown-end ml-4">
             <label tabIndex={0} className="btn btn-ghost btn-circle avatar">
               <div className="w-10 rounded-full">
-                <img src="/public/user.png" height={20} width={20} alt="profile" />
+                <img src="/user.png" height={20} width={20} alt="profile" />
               </div>
             </label>
             <ul

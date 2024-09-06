@@ -12,33 +12,39 @@ import TitleCard from '../../../components/Cards/TitleCard';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
-function BarChart({ data }) {
-    const labels = data.map(item => item.new_commodity); 
-    const chartData = {
-        labels,
-        datasets: [
-          {
-            label: 'Container Count',
-            data: data.map(item => item.new_cantequipo),
-            backgroundColor: 'rgba(255, 99, 132, 1)',
-          },
-        ],
-      };
+function BarChart({ data, title }) {
+  const labels = data.map(item => item.label); // Utiliza el 'label' pasado en los datos
+  const chartData = {
+    labels,
+    datasets: [
+      {
+        label: 'Cantidad de Cargas',
+        data: data.map(item => item.value), // Utiliza el 'value' pasado en los datos
+        backgroundColor: 'rgba(75, 192, 192, 0.6)',
+        borderColor: 'rgba(75, 192, 192, 1)',
+        borderWidth: 1,
+      },
+    ],
+  };
 
-    const options = {
-        responsive: true,
-        plugins: {
-          legend: {
-            position: 'top',
-          }
-        },
-      };
+  const options = {
+    responsive: true,
+    plugins: {
+      legend: {
+        position: 'top',
+      },
+      title: {
+        display: true,
+        text: title
+      },
+    },
+  };
 
-    return(
-      <TitleCard title={"Container Count per Commodity"}>
-            <Bar options={options} data={chartData} />
-      </TitleCard>
-    );
+  return (
+    <TitleCard title={title}>
+      <Bar options={options} data={chartData} />
+    </TitleCard>
+  );
 }
 
 export default BarChart;

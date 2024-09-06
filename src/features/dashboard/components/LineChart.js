@@ -23,17 +23,18 @@ ChartJS.register(
   Legend
 );
 
-function LineChart({ data }) {
-  const labels = data.map(item => new Date(item.new_eta).toLocaleDateString()); 
+function LineChart({ data, title }) {
+  const labels = data.map(item => item.label);
   const chartData = {
     labels,
     datasets: [
       {
         fill: true,
-        label: 'ETA Dates',
-        data: data.map(item => item.new_cantequipo),
+        label: 'Cantidad de Cargas',
+        data: data.map(item => item.value),
         borderColor: 'rgb(53, 162, 235)',
         backgroundColor: 'rgba(53, 162, 235, 0.5)',
+        tension: 0.4,
       },
     ],
   };
@@ -44,11 +45,15 @@ function LineChart({ data }) {
       legend: {
         position: 'top',
       },
+      title: {
+        display: true,
+        text: title
+      },
     },
   };
 
   return (
-    <TitleCard title={"ETA Dates Overview"}>
+    <TitleCard title={title}>
       <Line data={chartData} options={options} />
     </TitleCard>
   );

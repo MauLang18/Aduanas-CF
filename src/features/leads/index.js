@@ -1,50 +1,57 @@
 import { useEffect, useState } from "react";
 import moment from "moment";
+import axios from "axios";
 import TitleCard from "../../components/Cards/TitleCard";
 import { showNotification } from "../common/headerSlice";
-import { useDispatch } from 'react-redux'; // Asegúrate de importar useDispatch
+import { useDispatch } from "react-redux";
 
-// Importación de los archivos JSON desde el directorio src
-import polMapping from '../../data/pol.json';
-import poeMapping from '../../data/poe.json';
-import statusMapping from '../../data/status.json';
-import cantEquipoMapping from '../../data/cantEquipo.json';
-import tamanoEquipoMapping from '../../data/tamanoEquipo.json';
-import ejecutivoMapping from '../../data/ejecutivo.json';
+// Importación de los archivos JSON
+import polMapping from "../../data/pol.json";
+import poeMapping from "../../data/poe.json";
+import statusMapping from "../../data/status.json";
+import cantEquipoMapping from "../../data/cantEquipo.json";
+import tamanoEquipoMapping from "../../data/tamanoEquipo.json";
+import ejecutivoMapping from "../../data/ejecutivo.json";
 
 function Leads() {
   const [leads, setLeads] = useState([]);
   const [filter, setFilter] = useState("0");
   const [textFilter, setTextFilter] = useState("");
+  const [comments, setComments] = useState({}); // Estado para almacenar los comentarios
   const dispatch = useDispatch();
 
   // Función para obtener los leads
   const fetchLeads = async (filterValue, textValue) => {
     try {
       const response = await fetch(
-        `http://localhost:5218/api/TransInternacional?numFilter=${filterValue}&textFilter=${textValue}`
+        `https://api.logisticacastrofallas.com/api/TransInternacional?numFilter=${filterValue}&textFilter=${textValue}`
       );
       const data = await response.json();
       if (data.isSuccess) {
         const leadsData = data.data.value;
         const today = moment().startOf("day");
 
+        let filteredData = leadsData;
+
         if (filter === "0") {
-          const filteredData = leadsData
+          filteredData = leadsData
             .filter(
               (item) =>
                 item.new_eta && moment(item.new_eta).isSameOrAfter(today)
             )
             .sort((a, b) => moment(a.new_eta) - moment(b.new_eta));
-
-          setLeads(filteredData);
-        } else {
-          setLeads(leadsData);
         }
+
+        // Crear un objeto de comentarios inicial a partir de los datos filtrados
+        const initialComments = filteredData.reduce((acc, lead) => {
+          acc[lead.incidentid] = lead.new_descripcion1 || "";
+          return acc;
+        }, {});
+
+        setComments(initialComments); // Establecer los comentarios iniciales
+        setLeads(filteredData); // Establecer los leads filtrados
       } else {
-        dispatch(
-          showNotification({ message: data.message, type: "error" })
-        );
+        dispatch(showNotification({ message: data.message, type: "error" }));
       }
     } catch (error) {
       dispatch(
@@ -55,7 +62,7 @@ function Leads() {
 
   useEffect(() => {
     fetchLeads(filter, textFilter);
-  }, [filter, textFilter, dispatch]);
+  }, [filter, textFilter]);
 
   const handleFilterChange = (e) => {
     setFilter(e.target.value);
@@ -75,8 +82,45 @@ function Leads() {
   const getPoeName = (poe) => poeMapping[poe] || "";
   const getStatusName = (status) => statusMapping[status] || "";
   const getCantEquipoName = (cantEquipo) => cantEquipoMapping[cantEquipo] || "";
-  const getTamanoEquipoName = (tamanoEquipo) => tamanoEquipoMapping[tamanoEquipo] || "";
+  const getTamanoEquipoName = (tamanoEquipo) =>
+    tamanoEquipoMapping[tamanoEquipo] || "";
   const getEjecutivoName = (ejecutivo) => ejecutivoMapping[ejecutivo] || "";
+
+  // Manejar el cambio de comentario en el campo de texto
+  const handleCommentChange = (e, id) => {
+    setComments({ ...comments, [id]: e.target.value });
+  };
+
+  // Guardar el comentario cuando el usuario salga del campo de texto (onBlur)
+  const handleCommentBlur = async (id) => {
+    const comentario = comments[id] || "";
+    try {
+      const response = await axios.patch(
+        "https://api.logisticacastrofallas.com/api/TransInternacional/Agregar",
+        {
+          transInternacionalId: id,
+          comentario,
+        }
+      );
+
+      if (response.data.isSuccess) {
+        dispatch(
+          showNotification({ message: "Comentario guardado", type: "success" })
+        );
+      } else {
+        dispatch(
+          showNotification({ message: response.data.message, type: "error" })
+        );
+      }
+    } catch (error) {
+      dispatch(
+        showNotification({
+          message: "Error al guardar el comentario",
+          type: "error",
+        })
+      );
+    }
+  };
 
   return (
     <>
@@ -135,6 +179,7 @@ function Leads() {
                 <th>Entrega de Traducción</th>
                 <th>Liberación Documental</th>
                 <th>Liberación Financiera</th>
+                <th>Comentario</th>
               </tr>
             </thead>
             <tbody>
@@ -155,22 +200,66 @@ function Leads() {
                     {l.new_eta ? moment(l.new_eta).format("DD MMM YY") : "N/A"}
                   </td>
                   <td>
-                    {l.new_confirmacionzarpe ? moment(l.new_confirmacionzarpe).format("DD MMM YY") : "N/A"}
+                    {l.new_confirmacionzarpe
+                      ? moment(l.new_confirmacionzarpe).format("DD MMM YY")
+                      : "N/A"}
                   </td>
                   <td>{getCantEquipoName(l.new_cantequipo)}</td>
                   <td>{getTamanoEquipoName(l.new_tamaoequipo)}</td>
                   <td>{l.new_contidadbultos}</td>
                   <td>{l.new_peso}</td>
                   <td>{renderBooleanBadge(l.new_aplicacertificadodeorigen)}</td>
-                  <td>{renderBooleanBadge(l.new_aplicacertificadoreexportacion)}</td>
-                  <td>{renderBooleanBadge(l.new_llevaexoneracion)}</td>
-                  <td>{l.new_entregabloriginal ? moment(l.new_entregabloriginal).format("DD MMM YY") : "N/A"}</td>
-                  <td>{l.new_entregacartadestrazabilidad ? moment(l.new_entregacartadestrazabilidad).format("DD MMM YY") : "N/A"}</td>
-                  <td>{l.new_blimpreso ? moment(l.new_blimpreso).format("DD MMM YY") : "N/A"}</td>
-                  <td>{l.new_bldigitadotica ? moment(l.new_bldigitadotica).format("DD MMM YY") : "N/A"}</td>
-                  <td>{l.new_entregatraduccion ? moment(l.new_entregatraduccion).format("DD MMM YY") : "N/A"}</td>
-                  <td>{l.new_liberaciondocumental ? moment(l.new_liberaciondocumental).format("DD MMM YY") : "N/A"}</td>
-                  <td>{l.new_liberacionfinanciera ? moment(l.new_liberacionfinanciera).format("DD MMM YY") : "N/A"}</td>
+                  <td>
+                    {renderBooleanBadge(l.new_aplicacertificadodereexportacion)}
+                  </td>
+                  <td>{renderBooleanBadge(l.new_aplicaexoneracion)}</td>
+                  <td>{renderBooleanBadge(l.new_entregabloriginal)}</td>
+                  <td>
+                    {renderBooleanBadge(
+                      l.new_entregadecargadetrazabilidad
+                    )}
+                  </td>
+                  <td>
+                    {l.new_fechablimpreso
+                      ? moment(l.new_fechablimpreso).format("DD MMM YY")
+                      : "N/A"}
+                  </td>
+                  <td>
+                    {l.new_fechabldigitadotica
+                      ? moment(l.new_fechabldigitadotica).format("DD MMM YY")
+                      : "N/A"}
+                  </td>
+                  <td>
+                    {l.new_fechatentregatraduccion
+                      ? moment(l.new_fechatentregatraduccion).format(
+                          "DD MMM YY"
+                        )
+                      : "N/A"}
+                  </td>
+                  <td>
+                    {l.new_fechaliberaciondocumental
+                      ? moment(l.new_fechaliberaciondocumental).format(
+                          "DD MMM YY"
+                        )
+                      : "N/A"}
+                  </td>
+                  <td>
+                    {l.new_fechaliberacionfinanciera
+                      ? moment(l.new_fechaliberacionfinanciera).format(
+                          "DD MMM YY"
+                        )
+                      : "N/A"}
+                  </td>
+                  <td>
+                    {/* Campo de comentario */}
+                    <textarea
+                      value={comments[l.incidentid] || ""}
+                      onChange={(e) => handleCommentChange(e, l.incidentid)}
+                      onBlur={() => handleCommentBlur(l.incidentid)}
+                      placeholder="Agrega un comentario"
+                      className="textarea textarea-primary"
+                    ></textarea>
+                  </td>
                 </tr>
               ))}
             </tbody>
