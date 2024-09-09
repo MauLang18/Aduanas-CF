@@ -31,7 +31,11 @@ function Leads() {
         const leadsData = data.data.value;
         const today = moment().startOf("day");
 
-        let filteredData = leadsData;
+        let filteredData = leadsData
+          .filter(
+            (item) => item.new_eta && moment(item.new_eta).isSameOrAfter(today)
+          )
+          .sort((a, b) => moment(a.new_eta) - moment(b.new_eta));
 
         if (filter === "0") {
           filteredData = leadsData
@@ -215,9 +219,7 @@ function Leads() {
                   <td>{renderBooleanBadge(l.new_aplicaexoneracion)}</td>
                   <td>{renderBooleanBadge(l.new_entregabloriginal)}</td>
                   <td>
-                    {renderBooleanBadge(
-                      l.new_entregadecargadetrazabilidad
-                    )}
+                    {renderBooleanBadge(l.new_entregadecargadetrazabilidad)}
                   </td>
                   <td>
                     {l.new_fechablimpreso
