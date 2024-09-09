@@ -34,11 +34,11 @@ const routes = [
     icon: <InboxArrowDownIcon className={iconClasses}/>, // icon component
     name: 'Transporte Internacional', // name that appear in Sidebar
   },
-  {
-    path: '/app/charts', // url
-    icon: <ChartBarIcon className={iconClasses}/>, // icon component
-    name: 'Graficos', // name that appear in Sidebar
-  },
+  // {
+  //   path: '/app/charts', // url
+  //   icon: <ChartBarIcon className={iconClasses}/>, // icon component
+  //   name: 'Graficos', // name that appear in Sidebar
+  // },
 ]
 
 export default routes

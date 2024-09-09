@@ -25,7 +25,7 @@ function Login() {
         try {
             setLoading(true);
 
-            const response = await axios.post('http://localhost:5218/api/Auth/Login?authType=Interno', {
+            const response = await axios.post('https://api.logisticacastrofallas.com/api/Auth/Login?authType=Interno', {
                 correo: loginObj.emailId,
                 pass: loginObj.password
             });

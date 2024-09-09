@@ -9,14 +9,14 @@ import TitleCard from '../../../components/Cards/TitleCard';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
-function DoughnutChart({ data }) {
-  const labels = [...new Set(data.map(item => item.new_ejecutivocomercial))];
+function DoughnutChart({ data, title }) {
+  const labels = data.map(item => item.label);
   const chartData = {
     labels,
     datasets: [
       {
-        label: 'Executives',
-        data: labels.map(label => data.filter(item => item.new_ejecutivocomercial === label).length),
+        label: 'Cantidad de Cargas',
+        data: data.map(item => item.value),
         backgroundColor: [
           'rgba(255, 99, 132, 0.6)',
           'rgba(54, 162, 235, 0.6)',
@@ -39,7 +39,7 @@ function DoughnutChart({ data }) {
   };
 
   return (
-    <TitleCard title={"Distribution by Executive"}>
+    <TitleCard title={title}>
       <Doughnut data={chartData} />
     </TitleCard>
   );
