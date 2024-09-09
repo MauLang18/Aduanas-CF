@@ -31,20 +31,24 @@ function Leads() {
         const leadsData = data.data.value;
         const today = moment().startOf("day");
 
-        let filteredData = leadsData
-          .filter(
-            (item) => item.new_eta && moment(item.new_eta).isSameOrAfter(today)
-          )
-          .sort((a, b) => moment(a.new_eta) - moment(b.new_eta));
+        // Filtrar para excluir los preestados indeseados
+        let filteredData = leadsData.filter(
+          (item) =>
+            ![100000012, 100000023, 100000010, 100000022, 100000021, 100000019].includes(item.new_preestado2)
+        );
 
-        if (filter === "0") {
-          filteredData = leadsData
-            .filter(
-              (item) =>
-                item.new_eta && moment(item.new_eta).isSameOrAfter(today)
-            )
-            .sort((a, b) => moment(a.new_eta) - moment(b.new_eta));
-        }
+        // Filtrar solo los que tengan ETA igual o posterior a la fecha actual o que no tengan ETA
+        filteredData = filteredData.filter(
+          (item) => !item.new_eta || moment(item.new_eta).isSameOrAfter(today)
+        );
+
+        // Ordenar los que no tienen ETA al fondo
+        filteredData = filteredData.sort((a, b) => {
+          if (!a.new_eta && b.new_eta) return 1; // Si 'a' no tiene ETA, va al fondo
+          if (!b.new_eta && a.new_eta) return -1; // Si 'b' no tiene ETA, 'a' va arriba
+          if (!a.new_eta && !b.new_eta) return 0; // Ambos sin ETA, no cambian de lugar
+          return moment(a.new_eta) - moment(b.new_eta); // Si ambos tienen ETA, ordenar por fecha
+        });
 
         // Crear un objeto de comentarios inicial a partir de los datos filtrados
         const initialComments = filteredData.reduce((acc, lead) => {
@@ -212,15 +216,11 @@ function Leads() {
                   <td>{getTamanoEquipoName(l.new_tamaoequipo)}</td>
                   <td>{l.new_contidadbultos}</td>
                   <td>{l.new_peso}</td>
-                  <td>{renderBooleanBadge(l.new_aplicacertificadodeorigen)}</td>
-                  <td>
-                    {renderBooleanBadge(l.new_aplicacertificadodereexportacion)}
-                  </td>
-                  <td>{renderBooleanBadge(l.new_aplicaexoneracion)}</td>
-                  <td>{renderBooleanBadge(l.new_entregabloriginal)}</td>
-                  <td>
-                    {renderBooleanBadge(l.new_entregadecargadetrazabilidad)}
-                  </td>
+                  <td>{renderBooleanBadge(l.new_certificadoorigen)}</td>
+                  <td>{renderBooleanBadge(l.new_certificadoreexportacion)}</td>
+                  <td>{renderBooleanBadge(l.new_exoneracion)}</td>
+                  <td>{renderBooleanBadge(l.new_entregablo)}</td>
+                  <td>{renderBooleanBadge(l.new_entregacargatrazabilidad)}</td>
                   <td>
                     {l.new_fechablimpreso
                       ? moment(l.new_fechablimpreso).format("DD MMM YY")
@@ -232,35 +232,26 @@ function Leads() {
                       : "N/A"}
                   </td>
                   <td>
-                    {l.new_fechatentregatraduccion
-                      ? moment(l.new_fechatentregatraduccion).format(
-                          "DD MMM YY"
-                        )
+                    {l.new_fechatraduccion
+                      ? moment(l.new_fechatraduccion).format("DD MMM YY")
                       : "N/A"}
                   </td>
                   <td>
                     {l.new_fechaliberaciondocumental
-                      ? moment(l.new_fechaliberaciondocumental).format(
-                          "DD MMM YY"
-                        )
+                      ? moment(l.new_fechaliberaciondocumental).format("DD MMM YY")
                       : "N/A"}
                   </td>
                   <td>
                     {l.new_fechaliberacionfinanciera
-                      ? moment(l.new_fechaliberacionfinanciera).format(
-                          "DD MMM YY"
-                        )
+                      ? moment(l.new_fechaliberacionfinanciera).format("DD MMM YY")
                       : "N/A"}
                   </td>
                   <td>
-                    {/* Campo de comentario */}
                     <textarea
                       value={comments[l.incidentid] || ""}
                       onChange={(e) => handleCommentChange(e, l.incidentid)}
-                      onBlur={() => handleCommentBlur(l.incidentid)}
-                      placeholder="Agrega un comentario"
-                      className="textarea textarea-primary"
-                    ></textarea>
+                      onBlur={() => handleCommentBlur(l.incidentid)} // Guardar cuando se pierda el foco
+                    />
                   </td>
                 </tr>
               ))}

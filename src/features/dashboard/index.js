@@ -64,6 +64,14 @@ function Dashboard() {
         );
         const filteredData = response.data.data.value;
 
+        // Filtrar los datos con ETA válida o sin ETA
+        const excludedStatuses = [100000012, 100000023, 100000010, 100000022, 100000021, 100000019];
+        const validFilteredData = filteredData.filter(
+          (item) =>
+            (!item.new_eta || moment(item.new_eta).isSameOrAfter(moment())) &&
+            !excludedStatuses.includes(item.new_preestado2)
+        );
+
         // Filtrar y calcular estadísticas
         const today = moment().startOf("day");
         const endOfToday = moment().endOf("day");
@@ -72,18 +80,16 @@ function Dashboard() {
         const startOfMonth = moment().startOf("month").startOf("day");
         const endOfMonth = moment().endOf("month").endOf("day");
 
-        const todayCount = filteredData.filter((item) =>
+        const todayCount = validFilteredData.filter((item) =>
           moment(item.new_eta).isBetween(today, endOfToday, null, "[]")
         ).length;
-        const weekCount = filteredData.filter((item) =>
+        const weekCount = validFilteredData.filter((item) =>
           moment(item.new_eta).isBetween(startOfWeek, endOfWeek, null, "[]")
         ).length;
-        const monthCount = filteredData.filter((item) =>
+        const monthCount = validFilteredData.filter((item) =>
           moment(item.new_eta).isBetween(startOfMonth, endOfMonth, null, "[]")
         ).length;
-        const totalCount = filteredData.filter((item) =>
-          moment(item.new_eta).isSameOrAfter(today)
-        ).length;
+        const totalCount = validFilteredData.length;
 
         setTodayStats(todayCount);
         setWeekStats(weekCount);
@@ -102,33 +108,23 @@ function Dashboard() {
 
         const groupedData = {
           executive: groupBy(
-            filteredData.filter((item) =>
-              moment(item.new_eta).isSameOrAfter(today)
-            ),
+            validFilteredData,
             "new_ejecutivocomercial"
           ),
           client: groupBy(
-            filteredData.filter((item) =>
-              moment(item.new_eta).isSameOrAfter(today)
-            ),
+            validFilteredData,
             "_customerid_value"
           ),
           status: groupBy(
-            filteredData.filter((item) =>
-              moment(item.new_eta).isSameOrAfter(today)
-            ),
+            validFilteredData,
             "new_preestado2"
           ),
           pol: groupBy(
-            filteredData.filter((item) =>
-              moment(item.new_eta).isSameOrAfter(today)
-            ),
+            validFilteredData,
             "new_pol"
           ),
           poe: groupBy(
-            filteredData.filter((item) =>
-              moment(item.new_eta).isSameOrAfter(today)
-            ),
+            validFilteredData,
             "new_poe"
           ),
         };
