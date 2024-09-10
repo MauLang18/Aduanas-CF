@@ -52,7 +52,7 @@ function Leads() {
 
         // Crear un objeto de comentarios inicial a partir de los datos filtrados
         const initialComments = filteredData.reduce((acc, lead) => {
-          acc[lead.incidentid] = lead.new_descripcion1 || "";
+          acc[lead.incidentid] = lead.new_observacionesgenerales || "";
           return acc;
         }, {});
 
@@ -130,6 +130,39 @@ function Leads() {
     }
   };
 
+  const handleDownloadExcel = async () => {
+    try {
+      const response = await axios.get(
+        "https://api.logisticacastrofallas.com/api/TransInternacional/Download?numFilter=0",
+        {
+          responseType: "blob", // Asegurarse de que se reciba el archivo como un Blob
+        }
+      );
+  
+      // Crear una URL para el archivo Blob
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      
+      // Crear un enlace temporal para la descarga
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", "transporte_internacional.xlsx"); // Nombre del archivo
+  
+      // Añadir el enlace al documento y hacer clic en él para iniciar la descarga
+      document.body.appendChild(link);
+      link.click();
+  
+      // Remover el enlace temporal del DOM
+      document.body.removeChild(link);
+    } catch (error) {
+      dispatch(
+        showNotification({
+          message: "Error al descargar el archivo",
+          type: "error",
+        })
+      );
+    }
+  };  
+
   return (
     <>
       <TitleCard title="Transporte Internacional" topMargin="mt-2">
@@ -146,6 +179,7 @@ function Leads() {
               <option value="3">BCF</option>
               <option value="4">Factura</option>
               <option value="5">PO</option>
+              <option value="6">IDTRA</option>
             </select>
             <input
               type="text"
@@ -154,6 +188,12 @@ function Leads() {
               onChange={handleTextFilterChange}
               placeholder="Buscar..."
             />
+            <button
+              className="btn btn-primary ml-4"
+              onClick={handleDownloadExcel}
+            >
+              Descargar Excel
+            </button>
           </div>
         </div>
         <div className="overflow-x-auto w-full">
@@ -250,8 +290,10 @@ function Leads() {
                     <textarea
                       value={comments[l.incidentid] || ""}
                       onChange={(e) => handleCommentChange(e, l.incidentid)}
-                      onBlur={() => handleCommentBlur(l.incidentid)} // Guardar cuando se pierda el foco
-                    />
+                      onBlur={() => handleCommentBlur(l.incidentid)}
+                      placeholder="Agrega un comentario"
+                      className="textarea textarea-primary"
+                    ></textarea>
                   </td>
                 </tr>
               ))}
