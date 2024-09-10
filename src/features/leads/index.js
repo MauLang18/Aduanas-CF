@@ -256,29 +256,29 @@ function Leads() {
                   <td>{getTamanoEquipoName(l.new_tamaoequipo)}</td>
                   <td>{l.new_contidadbultos}</td>
                   <td>{l.new_peso}</td>
-                  <td>{renderBooleanBadge(l.new_certificadoorigen)}</td>
-                  <td>{renderBooleanBadge(l.new_certificadoreexportacion)}</td>
-                  <td>{renderBooleanBadge(l.new_exoneracion)}</td>
-                  <td>{renderBooleanBadge(l.new_entregablo)}</td>
-                  <td>{renderBooleanBadge(l.new_entregacargatrazabilidad)}</td>
+                  <td>{renderBooleanBadge(l.new_aplicacertificadodeorigen)}</td>
+                  <td>{renderBooleanBadge(l.new_aplicacertificadoreexportacion)}</td>
+                  <td>{renderBooleanBadge(l.new_llevaexoneracion)}</td>
+                  <td>{renderBooleanBadge(l.new_entregabloriginal)}</td>
+                  <td>{renderBooleanBadge(l.new_entregacartatrazabilidad)}</td>
                   <td>
                     {l.new_fechablimpreso
                       ? moment(l.new_fechablimpreso).format("DD MMM YY")
                       : "N/A"}
                   </td>
                   <td>
-                    {l.new_fechabldigitadotica
-                      ? moment(l.new_fechabldigitadotica).format("DD MMM YY")
+                    {l.new_fechabldigittica
+                      ? moment(l.new_fechabldigittica).format("DD MMM YY")
                       : "N/A"}
                   </td>
                   <td>
-                    {l.new_fechatraduccion
-                      ? moment(l.new_fechatraduccion).format("DD MMM YY")
+                    {l.new_entregatraduccion
+                      ? moment(l.new_entregatraduccion).format("DD MMM YY")
                       : "N/A"}
                   </td>
                   <td>
-                    {l.new_fechaliberaciondocumental
-                      ? moment(l.new_fechaliberaciondocumental).format("DD MMM YY")
+                    {l.new_liberacionmovimientoinventario
+                      ? moment(l.new_liberacionmovimientoinventario).format("DD MMM YY")
                       : "N/A"}
                   </td>
                   <td>
