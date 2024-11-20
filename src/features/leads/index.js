@@ -101,7 +101,7 @@ function Leads() {
     formData.append("fieldName", fieldName);
 
     try {
-      const response = await axios.post(
+      const response = await axios.patch(
         "https://api.logisticacastrofallas.com/api/TransInternacional/Upload",
         formData
       );
