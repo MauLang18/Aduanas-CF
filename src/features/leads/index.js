@@ -32,22 +32,29 @@ function Leads() {
         const today = moment().startOf("day");
 
         // Filtrar para excluir los preestados indeseados
-        let filteredData = leadsData.filter(
-          (item) =>
-            ![100000012, 100000023, 100000010, 100000022, 100000021, 100000019].includes(item.new_preestado2)
-        );
+        let filteredData = leadsData;
 
-        // Filtrar solo los que tengan ETA igual o posterior a la fecha actual o que no tengan ETA
-        filteredData = filteredData.filter(
-          (item) => !item.new_eta || moment(item.new_eta).isSameOrAfter(today)
-        );
-
-        // Ordenar los que no tienen ETA al fondo
         filteredData = filteredData.sort((a, b) => {
-          if (!a.new_eta && b.new_eta) return 1; // Si 'a' no tiene ETA, va al fondo
-          if (!b.new_eta && a.new_eta) return -1; // Si 'b' no tiene ETA, 'a' va arriba
-          if (!a.new_eta && !b.new_eta) return 0; // Ambos sin ETA, no cambian de lugar
-          return moment(a.new_eta) - moment(b.new_eta); // Si ambos tienen ETA, ordenar por fecha
+          const now = moment();
+
+          // Si 'a' no tiene ETA, va al fondo
+          if (!a.new_eta && b.new_eta) return 1;
+          if (!b.new_eta && a.new_eta) return -1;
+          if (!a.new_eta && !b.new_eta) return 0;
+
+          // Verificar si las fechas son anteriores al presente
+          const isAPast = moment(a.new_eta).isBefore(now);
+          const isBPast = moment(b.new_eta).isBefore(now);
+
+          // Si 'a' es pasado y 'b' no, 'b' va primero
+          if (isAPast && !isBPast) return 1;
+          if (!isAPast && isBPast) return -1;
+
+          // Ordenar las fechas posteriores (o ambas pasadas) por cercanía al presente
+          const diffA = Math.abs(moment(a.new_eta).diff(now));
+          const diffB = Math.abs(moment(b.new_eta).diff(now));
+
+          return diffA - diffB; // Fecha más cercana primero
         });
 
         // Crear un objeto de comentarios inicial a partir de los datos filtrados
@@ -138,19 +145,19 @@ function Leads() {
           responseType: "blob", // Asegurarse de que se reciba el archivo como un Blob
         }
       );
-  
+
       // Crear una URL para el archivo Blob
       const url = window.URL.createObjectURL(new Blob([response.data]));
-      
+
       // Crear un enlace temporal para la descarga
       const link = document.createElement("a");
       link.href = url;
       link.setAttribute("download", "transporte_internacional.xlsx"); // Nombre del archivo
-  
+
       // Añadir el enlace al documento y hacer clic en él para iniciar la descarga
       document.body.appendChild(link);
       link.click();
-  
+
       // Remover el enlace temporal del DOM
       document.body.removeChild(link);
     } catch (error) {
@@ -161,7 +168,7 @@ function Leads() {
         })
       );
     }
-  };  
+  };
 
   return (
     <>
@@ -257,7 +264,9 @@ function Leads() {
                   <td>{l.new_contidadbultos}</td>
                   <td>{l.new_peso}</td>
                   <td>{renderBooleanBadge(l.new_aplicacertificadodeorigen)}</td>
-                  <td>{renderBooleanBadge(l.new_aplicacertificadoreexportacion)}</td>
+                  <td>
+                    {renderBooleanBadge(l.new_aplicacertificadoreexportacion)}
+                  </td>
                   <td>{renderBooleanBadge(l.new_llevaexoneracion)}</td>
                   <td>{renderBooleanBadge(l.new_entregabloriginal)}</td>
                   <td>{renderBooleanBadge(l.new_entregacartatrazabilidad)}</td>
@@ -278,12 +287,16 @@ function Leads() {
                   </td>
                   <td>
                     {l.new_liberacionmovimientoinventario
-                      ? moment(l.new_liberacionmovimientoinventario).format("DD MMM YY")
+                      ? moment(l.new_liberacionmovimientoinventario).format(
+                          "DD MMM YY"
+                        )
                       : "N/A"}
                   </td>
                   <td>
                     {l.new_fechaliberacionfinanciera
-                      ? moment(l.new_fechaliberacionfinanciera).format("DD MMM YY")
+                      ? moment(l.new_fechaliberacionfinanciera).format(
+                          "DD MMM YY"
+                        )
                       : "N/A"}
                   </td>
                   <td>
