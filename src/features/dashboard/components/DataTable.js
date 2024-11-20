@@ -1,7 +1,4 @@
 function DataTable({ data, columns }) {
-  console.log("Columns:", columns);
-  console.log("Data:", data);
-
   return (
     <div className="overflow-x-auto max-w-full">
       <table className="table-auto w-full table-layout-auto">

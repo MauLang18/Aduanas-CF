@@ -11,10 +11,10 @@ function Modal({ title, children, onClose }) {
 
   return (
     <div
-      className="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center"
+      className="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center z-50" // Clase z-50 para asegurar prioridad
       onClick={handleOutsideClick} // Permite cerrar al tocar fuera
     >
-      <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-4xl h-96 overflow-y-auto mx-4 sm:mx-auto">
+      <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-4xl h-96 overflow-y-auto mx-4 sm:mx-auto relative">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-bold">{title}</h2>
           <button

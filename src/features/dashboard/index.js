@@ -124,7 +124,6 @@ function Dashboard() {
   // Manejar clic en las ruletas
   const handleCircleClick = (type, data) => {
     let filtered;
-    console.log(data);
     if (type === "executive") {
       filtered = filteredData.filter(
         (item) => getEjecutivoName(item.new_ejecutivocomercial) === data.label

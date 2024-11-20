@@ -17,10 +17,25 @@ function Leads() {
   const [leads, setLeads] = useState([]);
   const [filter, setFilter] = useState("0");
   const [textFilter, setTextFilter] = useState("");
-  const [comments, setComments] = useState({}); // Estado para almacenar los comentarios
+  const [comments, setComments] = useState({});
+  const [documents, setDocuments] = useState({});
+  const [selectedDocument, setSelectedDocument] = useState(null);
+  const [isModalOpen, setModalOpen] = useState(false);
   const dispatch = useDispatch();
 
-  // Función para obtener los leads
+  const documentFields = [
+    "new_facturacomercial",
+    "new_listadeempaque",
+    "new_draftbl",
+    "new_bloriginal",
+    "new_cartatrazabilidad",
+    "new_cartadesglosecargos",
+    "new_exoneracion",
+    "new_certificadoorigen",
+    "new_certificadoreexportacion",
+    "new_permisos",
+  ];
+
   const fetchLeads = async (filterValue, textValue) => {
     try {
       const response = await fetch(
@@ -79,12 +94,51 @@ function Leads() {
     fetchLeads(filter, textFilter);
   }, [filter, textFilter]);
 
-  const handleFilterChange = (e) => {
-    setFilter(e.target.value);
+  const handleFileUpload = async (file, leadId, fieldName) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("transInternacionalId", leadId);
+    formData.append("fieldName", fieldName);
+
+    try {
+      const response = await axios.post(
+        "https://api.logisticacastrofallas.com/api/TransInternacional/Upload",
+        formData
+      );
+
+      if (response.data.isSuccess) {
+        dispatch(
+          showNotification({
+            message: "Documento subido con éxito",
+            type: "success",
+          })
+        );
+
+        setDocuments((prev) => ({
+          ...prev,
+          [leadId]: {
+            ...prev[leadId],
+            [fieldName]: response.data.fileUrl,
+          },
+        }));
+      } else {
+        dispatch(
+          showNotification({ message: response.data.message, type: "error" })
+        );
+      }
+    } catch (error) {
+      dispatch(
+        showNotification({
+          message: "Error al subir el documento",
+          type: "error",
+        })
+      );
+    }
   };
 
-  const handleTextFilterChange = (e) => {
-    setTextFilter(e.target.value);
+  const handleDocumentClick = (url) => {
+    setSelectedDocument(url);
+    setModalOpen(true);
   };
 
   const renderBooleanBadge = (value) => (
@@ -93,20 +147,18 @@ function Leads() {
     </div>
   );
 
-  const getPolName = (pol) => polMapping[pol] || "";
-  const getPoeName = (poe) => poeMapping[poe] || "";
-  const getStatusName = (status) => statusMapping[status] || "";
-  const getCantEquipoName = (cantEquipo) => cantEquipoMapping[cantEquipo] || "";
-  const getTamanoEquipoName = (tamanoEquipo) =>
-    tamanoEquipoMapping[tamanoEquipo] || "";
-  const getEjecutivoName = (ejecutivo) => ejecutivoMapping[ejecutivo] || "";
+  const handleFilterChange = (e) => {
+    setFilter(e.target.value);
+  };
 
-  // Manejar el cambio de comentario en el campo de texto
+  const handleTextFilterChange = (e) => {
+    setTextFilter(e.target.value);
+  };
+
   const handleCommentChange = (e, id) => {
     setComments({ ...comments, [id]: e.target.value });
   };
 
-  // Guardar el comentario cuando el usuario salga del campo de texto (onBlur)
   const handleCommentBlur = async (id) => {
     const comentario = comments[id] || "";
     try {
@@ -170,6 +222,14 @@ function Leads() {
     }
   };
 
+  const getPolName = (pol) => polMapping[pol] || "";
+  const getPoeName = (poe) => poeMapping[poe] || "";
+  const getStatusName = (status) => statusMapping[status] || "";
+  const getCantEquipoName = (cantEquipo) => cantEquipoMapping[cantEquipo] || "";
+  const getTamanoEquipoName = (tamanoEquipo) =>
+    tamanoEquipoMapping[tamanoEquipo] || "";
+  const getEjecutivoName = (ejecutivo) => ejecutivoMapping[ejecutivo] || "";
+
   return (
     <>
       <TitleCard title="Transporte Internacional" topMargin="mt-2">
@@ -207,6 +267,7 @@ function Leads() {
           <table className="table w-full">
             <thead>
               <tr>
+                {/* Columnas existentes */}
                 <th>IDTRA</th>
                 <th>Status</th>
                 <th>Cliente</th>
@@ -235,85 +296,185 @@ function Leads() {
                 <th>Liberación Documental</th>
                 <th>Liberación Financiera</th>
                 <th>Comentario</th>
+                {/* Nuevas columnas */}
+                {/* <th>Factura Comercial</th>
+                <th>Lista de Empaque</th>
+                <th>Draft BL</th>
+                <th>BL Original</th>
+                <th>Carta Trazabilidad</th>
+                <th>Carta Desglose Cargos</th>
+                <th>Exoneración</th>
+                <th>Certificado Origen</th>
+                <th>Certificado Re-Exportación</th>
+                <th>Permisos</th> */}
+                {documentFields.map((field) => (
+                  <th key={field}>{field.replace("new_", "").toUpperCase()}</th>
+                ))}
               </tr>
             </thead>
             <tbody>
-              {leads.map((l, k) => (
-                <tr key={k}>
-                  <td>{l.title}</td>
-                  <td>{getStatusName(l.new_preestado2)}</td>
-                  <td>{l._customerid_value}</td>
-                  <td>{getEjecutivoName(l.new_ejecutivocomercial)}</td>
-                  <td>{l.new_contenedor}</td>
-                  <td>{l.new_factura}</td>
-                  <td>{l.new_commodity}</td>
-                  <td>{l.new_bcf}</td>
-                  <td>{l.new_po}</td>
-                  <td>{getPolName(l.new_pol)}</td>
-                  <td>{getPoeName(l.new_poe)}</td>
+              {leads.map((lead) => (
+                <tr key={lead.incidentid}>
+                  {/* Datos existentes */}
+                  <td>{lead.title}</td>
+                  <td>{getStatusName(lead.new_preestado2)}</td>
+                  <td>{lead._customerid_value}</td>
+                  <td>{getEjecutivoName(lead.new_ejecutivocomercial)}</td>
+                  <td>{lead.new_contenedor}</td>
+                  <td>{lead.new_factura}</td>
+                  <td>{lead.new_commodity}</td>
+                  <td>{lead.new_bcf}</td>
+                  <td>{lead.new_po}</td>
+                  <td>{getPolName(lead.new_pol)}</td>
+                  <td>{getPoeName(lead.new_poe)}</td>
                   <td>
-                    {l.new_eta ? moment(l.new_eta).format("DD MMM YY") : "N/A"}
-                  </td>
-                  <td>
-                    {l.new_confirmacionzarpe
-                      ? moment(l.new_confirmacionzarpe).format("DD MMM YY")
-                      : "N/A"}
-                  </td>
-                  <td>{getCantEquipoName(l.new_cantequipo)}</td>
-                  <td>{getTamanoEquipoName(l.new_tamaoequipo)}</td>
-                  <td>{l.new_contidadbultos}</td>
-                  <td>{l.new_peso}</td>
-                  <td>{renderBooleanBadge(l.new_aplicacertificadodeorigen)}</td>
-                  <td>
-                    {renderBooleanBadge(l.new_aplicacertificadoreexportacion)}
-                  </td>
-                  <td>{renderBooleanBadge(l.new_llevaexoneracion)}</td>
-                  <td>{renderBooleanBadge(l.new_entregabloriginal)}</td>
-                  <td>{renderBooleanBadge(l.new_entregacartatrazabilidad)}</td>
-                  <td>
-                    {l.new_fechablimpreso
-                      ? moment(l.new_fechablimpreso).format("DD MMM YY")
+                    {lead.new_eta
+                      ? moment(lead.new_eta).format("DD MMM YY")
                       : "N/A"}
                   </td>
                   <td>
-                    {l.new_fechabldigittica
-                      ? moment(l.new_fechabldigittica).format("DD MMM YY")
+                    {lead.new_confirmacionzarpe
+                      ? moment(lead.new_confirmacionzarpe).format("DD MMM YY")
+                      : "N/A"}
+                  </td>
+                  <td>{getCantEquipoName(lead.new_cantequipo)}</td>
+                  <td>{getTamanoEquipoName(lead.new_tamaoequipo)}</td>
+                  <td>{lead.new_contidadbultos}</td>
+                  <td>{lead.new_peso}</td>
+                  <td>
+                    {renderBooleanBadge(lead.new_aplicacertificadodeorigen)}
+                  </td>
+                  <td>
+                    {renderBooleanBadge(
+                      lead.new_aplicacertificadoreexportacion
+                    )}
+                  </td>
+                  <td>{renderBooleanBadge(lead.new_llevaexoneracion)}</td>
+                  <td>{renderBooleanBadge(lead.new_entregabloriginal)}</td>
+                  <td>
+                    {renderBooleanBadge(lead.new_entregacartatrazabilidad)}
+                  </td>
+                  <td>
+                    {lead.new_fechablimpreso
+                      ? moment(lead.new_fechablimpreso).format("DD MMM YY")
                       : "N/A"}
                   </td>
                   <td>
-                    {l.new_entregatraduccion
-                      ? moment(l.new_entregatraduccion).format("DD MMM YY")
+                    {lead.new_fechabldigittica
+                      ? moment(lead.new_fechabldigittica).format("DD MMM YY")
                       : "N/A"}
                   </td>
                   <td>
-                    {l.new_liberacionmovimientoinventario
-                      ? moment(l.new_liberacionmovimientoinventario).format(
+                    {lead.new_entregatraduccion
+                      ? moment(lead.new_entregatraduccion).format("DD MMM YY")
+                      : "N/A"}
+                  </td>
+                  <td>
+                    {lead.new_liberacionmovimientoinventario
+                      ? moment(lead.new_liberacionmovimientoinventario).format(
                           "DD MMM YY"
                         )
                       : "N/A"}
                   </td>
                   <td>
-                    {l.new_fechaliberacionfinanciera
-                      ? moment(l.new_fechaliberacionfinanciera).format(
+                    {lead.new_fechaliberacionfinanciera
+                      ? moment(lead.new_fechaliberacionfinanciera).format(
                           "DD MMM YY"
                         )
                       : "N/A"}
                   </td>
                   <td>
                     <textarea
-                      value={comments[l.incidentid] || ""}
-                      onChange={(e) => handleCommentChange(e, l.incidentid)}
-                      onBlur={() => handleCommentBlur(l.incidentid)}
+                      value={comments[lead.incidentid] || ""}
+                      onChange={(e) => handleCommentChange(e, lead.incidentid)}
+                      onBlur={() => handleCommentBlur(lead.incidentid)}
                       placeholder="Agrega un comentario"
                       className="textarea textarea-primary"
                     ></textarea>
                   </td>
+                  {/* Nuevas columnas */}
+                  {/* {Object.keys(documents[lead.incidentid] || {}).map(
+                    (field) => (
+                      <td key={field}>
+                        {documents[lead.incidentid][field] ? (
+                          <button
+                            className="btn btn-secondary"
+                            onClick={() =>
+                              handleDocumentClick(
+                                documents[lead.incidentid][field]
+                              )
+                            }
+                          >
+                            Ver
+                          </button>
+                        ) : (
+                          <input
+                            type="file"
+                            accept=".pdf"
+                            onChange={(e) =>
+                              handleFileUpload(
+                                e.target.files[0],
+                                lead.incidentid,
+                                field
+                              )
+                            }
+                          />
+                        )}
+                      </td>
+                    )
+                  )} */}
+                  {documentFields.map((field) => (
+                    <td key={field}>
+                      {documents[lead.incidentid]?.[field] ? (
+                        <button
+                          className="btn btn-secondary"
+                          onClick={() =>
+                            handleDocumentClick(
+                              documents[lead.incidentid][field]
+                            )
+                          }
+                        >
+                          Ver
+                        </button>
+                      ) : (
+                        <input
+                          type="file"
+                          accept=".pdf"
+                          onChange={(e) =>
+                            handleFileUpload(
+                              e.target.files[0],
+                              lead.incidentid,
+                              field
+                            )
+                          }
+                        />
+                      )}
+                    </td>
+                  ))}
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
       </TitleCard>
+
+      {/* Modal para ver documentos */}
+      {isModalOpen && (
+        <div className="modal modal-open">
+          <div className="modal-box z-50">
+            <iframe
+              src={selectedDocument}
+              title="Documento PDF"
+              className="w-full h-96"
+            ></iframe>
+            <div className="modal-action">
+              <button className="btn" onClick={() => setModalOpen(false)}>
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
