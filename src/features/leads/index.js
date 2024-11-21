@@ -44,42 +44,54 @@ function Leads() {
       const data = await response.json();
       if (data.isSuccess) {
         const leadsData = data.data.value;
-        const today = moment().startOf("day");
 
-        // Filtrar para excluir los preestados indeseados
-        let filteredData = leadsData;
-
-        filteredData = filteredData.sort((a, b) => {
-          const now = moment();
-
-          // Si 'a' no tiene ETA, va al fondo
+        // Ordenar los leads según las reglas existentes
+        const now = moment();
+        const filteredData = leadsData.sort((a, b) => {
           if (!a.new_eta && b.new_eta) return 1;
           if (!b.new_eta && a.new_eta) return -1;
           if (!a.new_eta && !b.new_eta) return 0;
 
-          // Verificar si las fechas son anteriores al presente
           const isAPast = moment(a.new_eta).isBefore(now);
           const isBPast = moment(b.new_eta).isBefore(now);
 
-          // Si 'a' es pasado y 'b' no, 'b' va primero
           if (isAPast && !isBPast) return 1;
           if (!isAPast && isBPast) return -1;
 
-          // Ordenar las fechas posteriores (o ambas pasadas) por cercanía al presente
           const diffA = Math.abs(moment(a.new_eta).diff(now));
           const diffB = Math.abs(moment(b.new_eta).diff(now));
 
-          return diffA - diffB; // Fecha más cercana primero
+          return diffA - diffB;
         });
 
-        // Crear un objeto de comentarios inicial a partir de los datos filtrados
+        // Crear un objeto de comentarios inicial
         const initialComments = filteredData.reduce((acc, lead) => {
           acc[lead.incidentid] = lead.new_observacionesgenerales || "";
           return acc;
         }, {});
 
-        setComments(initialComments); // Establecer los comentarios iniciales
-        setLeads(filteredData); // Establecer los leads filtrados
+        // Crear un objeto de documentos
+        const initialDocuments = filteredData.reduce((acc, lead) => {
+          acc[lead.incidentid] = {
+            new_facturacomercial: lead.new_facturacomercial || null,
+            new_listadeempaque: lead.new_listadeempaque || null,
+            new_draftbl: lead.new_draftbl || null,
+            new_bloriginal: lead.new_bloriginal || null,
+            new_cartatrazabilidad: lead.new_cartatrazabilidad || null,
+            new_cartadesglosecargos: lead.new_cartadesglosecargos || null,
+            new_exoneracion: lead.new_exoneracion || null,
+            new_certificadoorigen: lead.new_certificadoorigen || null,
+            new_certificadoreexportacion:
+              lead.new_certificadoreexportacion || null,
+            new_permisos: lead.new_permisos || null,
+          };
+          return acc;
+        }, {});
+
+        // Actualizar los estados
+        setComments(initialComments);
+        setDocuments(initialDocuments); // Establecer los documentos
+        setLeads(filteredData);
       } else {
         dispatch(showNotification({ message: data.message, type: "error" }));
       }
