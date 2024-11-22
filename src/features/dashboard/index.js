@@ -83,14 +83,7 @@ function Dashboard() {
         const data = response.data.data.value;
 
         // Filtrar datos válidos
-        const excludedStatuses = [
-          100000012, 100000023, 100000010, 100000022, 100000021, 100000019,
-        ];
-        const validData = data.filter(
-          (item) =>
-            (!item.new_eta || moment(item.new_eta).isSameOrAfter(moment())) &&
-            !excludedStatuses.includes(item.new_preestado2)
-        );
+        const validData = data.filter((item) => moment(item.new_eta));
 
         setFilteredData(validData);
 

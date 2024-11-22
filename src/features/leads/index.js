@@ -55,33 +55,14 @@ function Leads() {
       if (data.isSuccess) {
         const leadsData = data.data.value;
 
-        // Ordenar los leads según las reglas existentes
-        const now = moment();
-        const filteredData = leadsData.sort((a, b) => {
-          if (!a.new_eta && b.new_eta) return 1;
-          if (!b.new_eta && a.new_eta) return -1;
-          if (!a.new_eta && !b.new_eta) return 0;
-
-          const isAPast = moment(a.new_eta).isBefore(now);
-          const isBPast = moment(b.new_eta).isBefore(now);
-
-          if (isAPast && !isBPast) return 1;
-          if (!isAPast && isBPast) return -1;
-
-          const diffA = Math.abs(moment(a.new_eta).diff(now));
-          const diffB = Math.abs(moment(b.new_eta).diff(now));
-
-          return diffA - diffB;
-        });
-
         // Crear un objeto de comentarios inicial
-        const initialComments = filteredData.reduce((acc, lead) => {
+        const initialComments = leadsData.reduce((acc, lead) => {
           acc[lead.incidentid] = lead.new_observacionesgenerales || "";
           return acc;
         }, {});
 
         // Crear un objeto de documentos
-        const initialDocuments = filteredData.reduce((acc, lead) => {
+        const initialDocuments = leadsData.reduce((acc, lead) => {
           acc[lead.incidentid] = {
             new_facturacomercial: lead.new_facturacomercial || null,
             new_listadeempaque: lead.new_listadeempaque || null,
@@ -104,7 +85,7 @@ function Leads() {
         // Actualizar los estados
         setComments(initialComments);
         setDocuments(initialDocuments); // Establecer los documentos
-        setLeads(filteredData);
+        setLeads(leadsData);
       } else {
         dispatch(showNotification({ message: data.message, type: "error" }));
       }
