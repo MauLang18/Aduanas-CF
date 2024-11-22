@@ -49,6 +49,31 @@ function Dashboard() {
   const [tableTitle, setTableTitle] = useState("");
   const [modalData, setModalData] = useState([]);
 
+  const [categoryStats, setCategoryStats] = useState({
+    origen: 0,
+    ptoEntrada: 0,
+    movimientoWHS: 0,
+    enWHS: 0,
+    enTransito: {
+      today: 0,
+      week: 0,
+      month: 0,
+      total: 0,
+    },
+  });
+
+  const preestadoCategories = {
+    origen: [100000000, 100000001, 100000015, 100000014, 100000017],
+    enTransito: [100000002],
+    ptoEntrada: [100000027, 100000003],
+    movimientoWHS: [100000007, 100000024],
+    enWHS: [
+      100000010, 100000022, 100000023, 100000025, 100000004, 100000026,
+      100000020, 100000019, 100000016, 100000008, 100000011, 100000006,
+      100000013, 100000028, 100000009, 100000005,
+    ],
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -69,7 +94,6 @@ function Dashboard() {
 
         setFilteredData(validData);
 
-        // Estadísticas
         const today = moment().startOf("day");
         const endOfToday = moment().endOf("day");
         const startOfWeek = moment().startOf("week");
@@ -77,24 +101,54 @@ function Dashboard() {
         const startOfMonth = moment().startOf("month");
         const endOfMonth = moment().endOf("month");
 
-        setTodayStats(
-          validData.filter((item) =>
-            moment(item.new_eta).isBetween(today, endOfToday, null, "[]")
-          ).length
-        );
-        setWeekStats(
-          validData.filter((item) =>
-            moment(item.new_eta).isBetween(startOfWeek, endOfWeek, null, "[]")
-          ).length
-        );
-        setMonthStats(
-          validData.filter((item) =>
-            moment(item.new_eta).isBetween(startOfMonth, endOfMonth, null, "[]")
-          ).length
-        );
-        setTotalStats(validData.length);
+        // Estadísticas por categoría
+        const categoryStats = {
+          origen: validData.filter((item) =>
+            preestadoCategories.origen.includes(item.new_preestado2)
+          ).length,
+          ptoEntrada: validData.filter((item) =>
+            preestadoCategories.ptoEntrada.includes(item.new_preestado2)
+          ).length,
+          movimientoWHS: validData.filter((item) =>
+            preestadoCategories.movimientoWHS.includes(item.new_preestado2)
+          ).length,
+          enWHS: validData.filter((item) =>
+            preestadoCategories.enWHS.includes(item.new_preestado2)
+          ).length,
+          enTransito: {
+            today: validData.filter(
+              (item) =>
+                preestadoCategories.enTransito.includes(item.new_preestado2) &&
+                moment(item.new_eta).isBetween(today, endOfToday, null, "[]")
+            ).length,
+            week: validData.filter(
+              (item) =>
+                preestadoCategories.enTransito.includes(item.new_preestado2) &&
+                moment(item.new_eta).isBetween(
+                  startOfWeek,
+                  endOfWeek,
+                  null,
+                  "[]"
+                )
+            ).length,
+            month: validData.filter(
+              (item) =>
+                preestadoCategories.enTransito.includes(item.new_preestado2) &&
+                moment(item.new_eta).isBetween(
+                  startOfMonth,
+                  endOfMonth,
+                  null,
+                  "[]"
+                )
+            ).length,
+            total: validData.filter((item) =>
+              preestadoCategories.enTransito.includes(item.new_preestado2)
+            ).length,
+          },
+        };
 
-        // Agrupar datos para gráficos
+        setCategoryStats(categoryStats);
+
         const groupBy = (arr, key) =>
           arr.reduce((acc, item) => {
             const groupValue = item[key];
@@ -173,28 +227,56 @@ function Dashboard() {
 
   return (
     <>
-      {/* Estadísticas */}
+      {/* Estadísticas de Cargas en Tránsito */}
       <div className="grid lg:grid-cols-4 mt-2 md:grid-cols-2 grid-cols-1 gap-6">
         {[
           {
-            title: "Cargas Hoy",
-            value: todayStats,
-            icon: <UserGroupIcon className="w-8 h-8 text-indigo-500" />,
+            title: "Cargas en Tránsito (Hoy)",
+            value: categoryStats.enTransito.today || 0,
+            icon: <CircleStackIcon className="w-8 h-8 text-red-500" />,
           },
           {
-            title: "Cargas Semana",
-            value: weekStats,
-            icon: <UsersIcon className="w-8 h-8 text-green-500" />,
+            title: "Cargas en Tránsito (Semana)",
+            value: categoryStats.enTransito.week || 0,
+            icon: <CircleStackIcon className="w-8 h-8 text-red-500" />,
           },
           {
-            title: "Cargas Mes",
-            value: monthStats,
-            icon: <CircleStackIcon className="w-8 h-8 text-yellow-500" />,
+            title: "Cargas en Tránsito (Mes)",
+            value: categoryStats.enTransito.month || 0,
+            icon: <CircleStackIcon className="w-8 h-8 text-red-500" />,
           },
           {
-            title: "Total Cargas",
-            value: totalStats,
-            icon: <CreditCardIcon className="w-8 h-8 text-red-500" />,
+            title: "Cargas en Tránsito (Total)",
+            value: categoryStats.enTransito.total || 0,
+            icon: <CircleStackIcon className="w-8 h-8 text-red-500" />,
+          },
+        ].map((d, k) => (
+          <DashboardStats key={k} {...d} colorIndex={k} />
+        ))}
+      </div>
+
+      {/* Estadísticas Totales para las demás categorías */}
+      <div className="grid lg:grid-cols-4 mt-4 md:grid-cols-2 grid-cols-1 gap-6">
+        {[
+          {
+            title: "Cargas en Origen",
+            value: categoryStats.origen || 0,
+            icon: <CircleStackIcon className="w-8 h-8 text-blue-500" />,
+          },
+          {
+            title: "Cargas en Pto Entrada",
+            value: categoryStats.ptoEntrada || 0,
+            icon: <CircleStackIcon className="w-8 h-8 text-purple-500" />,
+          },
+          {
+            title: "Movimiento a WHS / HUB de Carga",
+            value: categoryStats.movimientoWHS || 0,
+            icon: <CircleStackIcon className="w-8 h-8 text-teal-500" />,
+          },
+          {
+            title: "Cargas en WHS/HUB de Carga",
+            value: categoryStats.enWHS || 0,
+            icon: <CircleStackIcon className="w-8 h-8 text-orange-500" />,
           },
         ].map((d, k) => (
           <DashboardStats key={k} {...d} colorIndex={k} />

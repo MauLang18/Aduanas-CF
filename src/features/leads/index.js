@@ -21,6 +21,14 @@ function Leads() {
   const [documents, setDocuments] = useState({});
   const [selectedDocument, setSelectedDocument] = useState(null);
   const [isModalOpen, setModalOpen] = useState(false);
+  const [fields, setFields] = useState({
+    new_numerorecibo: "",
+    new_nombrepedimentador: "",
+    new_duaanticipados: "",
+    new_duanacional: "",
+    new_tipoaforo: "",
+  });
+  const [selectedLead, setSelectedLead] = useState(null);
   const dispatch = useDispatch();
 
   const documentFields = [
@@ -34,6 +42,8 @@ function Leads() {
     "new_certificadoorigen",
     "new_certificadoreexportacion",
     "new_permisos",
+    "new_borradordeimpuestos",
+    "new_documentodenacionalizacion",
   ];
 
   const fetchLeads = async (filterValue, textValue) => {
@@ -84,6 +94,9 @@ function Leads() {
             new_certificadoreexportacion:
               lead.new_certificadoreexportacion || null,
             new_permisos: lead.new_permisos || null,
+            new_borradordeimpuestos: lead.new_borradordeimpuestos || null,
+            new_documentodenacionalizacion:
+              lead.new_documentodenacionalizacion || null,
           };
           return acc;
         }, {});
@@ -101,6 +114,18 @@ function Leads() {
       );
     }
   };
+
+  useEffect(() => {
+    if (selectedLead) {
+      setFields({
+        new_numerorecibo: selectedLead.new_numerorecibo || "",
+        new_nombrepedimentador: selectedLead.new_nombrepedimentador || "",
+        new_duaanticipados: selectedLead.new_duaanticipados || "",
+        new_duanacional: selectedLead.new_duanacional || "",
+        new_tipoaforo: selectedLead.new_tipoaforo || "",
+      });
+    }
+  }, [selectedLead]);
 
   useEffect(() => {
     fetchLeads(filter, textFilter);
@@ -178,6 +203,7 @@ function Leads() {
         "https://api.logisticacastrofallas.com/api/TransInternacional/Agregar",
         {
           transInternacionalId: id,
+          field: "new_observacionesgenerales",
           comentario,
         }
       );
@@ -195,6 +221,48 @@ function Leads() {
       dispatch(
         showNotification({
           message: "Error al guardar el comentario",
+          type: "error",
+        })
+      );
+    }
+  };
+
+  const handleFieldChange = (e, fieldName) => {
+    const { value } = e.target;
+    setFields((prevFields) => ({
+      ...prevFields,
+      [fieldName]: value,
+    }));
+  };
+
+  const handleFieldBlur = async (fieldName, id) => {
+    const value = fields[fieldName];
+    try {
+      const response = await axios.patch(
+        "https://api.logisticacastrofallas.com/api/TransInternacional/Agregar",
+        {
+          transInternacionalId: id,
+          field: fieldName,
+          value,
+        }
+      );
+
+      if (response.data.isSuccess) {
+        dispatch(
+          showNotification({
+            message: `Campo "${fieldName}" guardado correctamente`,
+            type: "success",
+          })
+        );
+      } else {
+        dispatch(
+          showNotification({ message: response.data.message, type: "error" })
+        );
+      }
+    } catch (error) {
+      dispatch(
+        showNotification({
+          message: `Error al guardar el campo "${fieldName}"`,
           type: "error",
         })
       );
@@ -281,6 +349,8 @@ function Leads() {
               <tr>
                 {/* Columnas existentes */}
                 <th>IDTRA</th>
+                <th># Recibo</th>
+                <th>Nombre Pedimentador</th>
                 <th>Status</th>
                 <th>Cliente</th>
                 <th>Ejecutivo</th>
@@ -297,6 +367,9 @@ function Leads() {
                 <th>Tamaño de Equipo</th>
                 <th>Cantidad de Bultos</th>
                 <th>Peso</th>
+                <th>Tipo Aforo</th>
+                <th># DUA Anticipado</th>
+                <th>#DUA Nacional</th>
                 <th>Certificado Origen</th>
                 <th>Certificado Reexportación</th>
                 <th>Exoneración</th>
@@ -309,16 +382,6 @@ function Leads() {
                 <th>Liberación Financiera</th>
                 <th>Comentario</th>
                 {/* Nuevas columnas */}
-                {/* <th>Factura Comercial</th>
-                <th>Lista de Empaque</th>
-                <th>Draft BL</th>
-                <th>BL Original</th>
-                <th>Carta Trazabilidad</th>
-                <th>Carta Desglose Cargos</th>
-                <th>Exoneración</th>
-                <th>Certificado Origen</th>
-                <th>Certificado Re-Exportación</th>
-                <th>Permisos</th> */}
                 {documentFields.map((field) => (
                   <th key={field}>{field.replace("new_", "").toUpperCase()}</th>
                 ))}
@@ -329,6 +392,35 @@ function Leads() {
                 <tr key={lead.incidentid}>
                   {/* Datos existentes */}
                   <td>{lead.title}</td>
+                  <td>
+                    <input
+                      type="text"
+                      value={fields.new_numerorecibo}
+                      onChange={(e) => handleFieldChange(e, "new_numerorecibo")}
+                      onBlur={() =>
+                        handleFieldBlur("new_numerorecibo", lead.incidentid)
+                      }
+                      placeholder="Número de Recibo"
+                      className="input input-primary"
+                    />
+                  </td>
+                  <td>
+                    <input
+                      type="text"
+                      value={fields.new_nombrepedimentador}
+                      onChange={(e) =>
+                        handleFieldChange(e, "new_nombrepedimentador")
+                      }
+                      onBlur={() =>
+                        handleFieldBlur(
+                          "new_nombrepedimentador",
+                          lead.incidentid
+                        )
+                      }
+                      placeholder="Nombre Pedimentador"
+                      className="input input-primary"
+                    />
+                  </td>
                   <td>{getStatusName(lead.new_preestado2)}</td>
                   <td>{lead._customerid_value}</td>
                   <td>{getEjecutivoName(lead.new_ejecutivocomercial)}</td>
@@ -353,6 +445,47 @@ function Leads() {
                   <td>{getTamanoEquipoName(lead.new_tamaoequipo)}</td>
                   <td>{lead.new_contidadbultos}</td>
                   <td>{lead.new_peso}</td>
+                  <td>
+                    <select
+                      value={fields.new_tipoaforo}
+                      onChange={(e) => handleFieldChange(e, "new_tipoaforo")}
+                      onBlur={() =>
+                        handleFieldBlur("new_tipoaforo", lead.incidentid)
+                      }
+                      className="select select-primary"
+                    >
+                      <option value="">Seleccione...</option>
+                      <option value="100000000">Verde</option>
+                      <option value="100000001">Amarillo</option>
+                      <option value="100000002">Rojo</option>
+                    </select>
+                  </td>
+                  <td>
+                    <input
+                      type="text"
+                      value={fields.new_duaanticipados}
+                      onChange={(e) =>
+                        handleFieldChange(e, "new_duaanticipados")
+                      }
+                      onBlur={() =>
+                        handleFieldBlur("new_duaanticipados", lead.incidentid)
+                      }
+                      placeholder="DUA Anticipados"
+                      className="input input-primary"
+                    />
+                  </td>
+                  <td>
+                    <input
+                      type="text"
+                      value={fields.new_duanacional}
+                      onChange={(e) => handleFieldChange(e, "new_duanacional")}
+                      onBlur={() =>
+                        handleFieldBlur("new_duanacional", lead.incidentid)
+                      }
+                      placeholder="DUA Nacional"
+                      className="input input-primary"
+                    />
+                  </td>
                   <td>
                     {renderBooleanBadge(lead.new_aplicacertificadodeorigen)}
                   </td>
@@ -405,36 +538,6 @@ function Leads() {
                     ></textarea>
                   </td>
                   {/* Nuevas columnas */}
-                  {/* {Object.keys(documents[lead.incidentid] || {}).map(
-                    (field) => (
-                      <td key={field}>
-                        {documents[lead.incidentid][field] ? (
-                          <button
-                            className="btn btn-secondary"
-                            onClick={() =>
-                              handleDocumentClick(
-                                documents[lead.incidentid][field]
-                              )
-                            }
-                          >
-                            Ver
-                          </button>
-                        ) : (
-                          <input
-                            type="file"
-                            accept=".pdf"
-                            onChange={(e) =>
-                              handleFileUpload(
-                                e.target.files[0],
-                                lead.incidentid,
-                                field
-                              )
-                            }
-                          />
-                        )}
-                      </td>
-                    )
-                  )} */}
                   {documentFields.map((field) => (
                     <td key={field}>
                       {documents[lead.incidentid]?.[field] ? (
