@@ -43,7 +43,6 @@ function Dashboard() {
   const [totalStats, setTotalStats] = useState(0);
 
   // Estado para el modal
-  const [selectedData, setSelectedData] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalTitle, setModalTitle] = useState("");
   const [tableTitle, setTableTitle] = useState("");
@@ -61,6 +60,88 @@ function Dashboard() {
       total: 0,
     },
   });
+
+  const handleCategoryClick = (category, period = null) => {
+    let filtered = [];
+    let title = "";
+
+    switch (category) {
+      case "origen":
+        filtered = filteredData.filter((item) =>
+          preestadoCategories.origen.includes(item.new_preestado2)
+        );
+        title = "Cargas en Origen";
+        break;
+      case "ptoEntrada":
+        filtered = filteredData.filter((item) =>
+          preestadoCategories.ptoEntrada.includes(item.new_preestado2)
+        );
+        title = "Cargas en Pto Entrada";
+        break;
+      case "movimientoWHS":
+        filtered = filteredData.filter((item) =>
+          preestadoCategories.movimientoWHS.includes(item.new_preestado2)
+        );
+        title = "Movimiento a WHS / HUB de Carga";
+        break;
+      case "enWHS":
+        filtered = filteredData.filter((item) =>
+          preestadoCategories.enWHS.includes(item.new_preestado2)
+        );
+        title = "Cargas en WHS / HUB de Carga";
+        break;
+      case "enTransito":
+        const today = moment().startOf("day");
+        const endOfToday = moment().endOf("day");
+        const startOfWeek = moment().startOf("week");
+        const endOfWeek = moment().endOf("week");
+        const startOfMonth = moment().startOf("month");
+        const endOfMonth = moment().endOf("month");
+
+        filtered = filteredData.filter((item) =>
+          preestadoCategories.enTransito.includes(item.new_preestado2)
+        );
+
+        if (period === "today") {
+          filtered = filtered.filter((item) =>
+            moment(item.new_eta).isBetween(today, endOfToday, null, "[]")
+          );
+          title = "Cargas en Tránsito (Hoy)";
+        } else if (period === "week") {
+          filtered = filtered.filter((item) =>
+            moment(item.new_eta).isBetween(startOfWeek, endOfWeek, null, "[]")
+          );
+          title = "Cargas en Tránsito (Semana)";
+        } else if (period === "month") {
+          filtered = filtered.filter((item) =>
+            moment(item.new_eta).isBetween(startOfMonth, endOfMonth, null, "[]")
+          );
+          title = "Cargas en Tránsito (Mes)";
+        } else {
+          title = "Cargas en Tránsito (Total)";
+        }
+        break;
+      default:
+        return;
+    }
+
+    // Formatear los datos para la tabla
+    const formattedData = filtered.map((item) => ({
+      idtra: item.title || "Sin IDTRA", // ID único
+      nombreCliente: item._customerid_value || "Desconocido",
+      pol: getPolName(item.new_pol) || "Desconocido",
+      etd: item.new_eta ? moment(item.new_eta).format("YYYY-MM-DD") : "N/A",
+      status: getStatusName(item.new_preestado2) || "Desconocido",
+      po: item.new_po || "Sin PO",
+    }));
+
+    setModalData(formattedData);
+    setModalTitle(title);
+    setIsModalOpen(true);
+
+    console.log("Datos filtrados:", filtered);
+    console.log("Datos formateados:", formattedData);
+  };
 
   const preestadoCategories = {
     origen: [100000000, 100000001, 100000015, 100000014, 100000017],
@@ -185,7 +266,7 @@ function Dashboard() {
 
     // Verifica que filtered tenga datos
     if (!filtered || filtered.length === 0) {
-      setSelectedData([]);
+      setModalData([]);
       return;
     }
 
@@ -199,7 +280,7 @@ function Dashboard() {
       po: item.new_po || "Sin PO", // PO
     }));
 
-    setSelectedData(formattedData);
+    setModalData(formattedData);
 
     // Abrir el modal con los datos filtrados
     setModalData(formattedData);
@@ -227,21 +308,25 @@ function Dashboard() {
             title: "Cargas en Tránsito (Hoy)",
             value: categoryStats.enTransito.today || 0,
             icon: <CircleStackIcon className="w-8 h-8 text-red-500" />,
+            onClick: () => handleCategoryClick("enTransito", "day"),
           },
           {
             title: "Cargas en Tránsito (Semana)",
             value: categoryStats.enTransito.week || 0,
             icon: <CircleStackIcon className="w-8 h-8 text-red-500" />,
+            onClick: () => handleCategoryClick("enTransito", "week"),
           },
           {
             title: "Cargas en Tránsito (Mes)",
             value: categoryStats.enTransito.month || 0,
             icon: <CircleStackIcon className="w-8 h-8 text-red-500" />,
+            onClick: () => handleCategoryClick("enTransito", "month"),
           },
           {
             title: "Cargas en Tránsito (Total)",
             value: categoryStats.enTransito.total || 0,
             icon: <CircleStackIcon className="w-8 h-8 text-red-500" />,
+            onClick: () => handleCategoryClick("enTransito"),
           },
         ].map((d, k) => (
           <DashboardStats key={k} {...d} colorIndex={k} />
@@ -255,21 +340,25 @@ function Dashboard() {
             title: "Cargas en Origen",
             value: categoryStats.origen || 0,
             icon: <CircleStackIcon className="w-8 h-8 text-blue-500" />,
+            onClick: () => handleCategoryClick("origen"),
           },
           {
             title: "Cargas en Pto Entrada",
             value: categoryStats.ptoEntrada || 0,
             icon: <CircleStackIcon className="w-8 h-8 text-purple-500" />,
+            onClick: () => handleCategoryClick("ptoEntrada"),
           },
           {
             title: "Movimiento a WHS / HUB de Carga",
             value: categoryStats.movimientoWHS || 0,
             icon: <CircleStackIcon className="w-8 h-8 text-teal-500" />,
+            onClick: () => handleCategoryClick("movimientoWHS"),
           },
           {
             title: "Cargas en WHS/HUB de Carga",
             value: categoryStats.enWHS || 0,
             icon: <CircleStackIcon className="w-8 h-8 text-orange-500" />,
+            onClick: () => handleCategoryClick("enWHS"),
           },
         ].map((d, k) => (
           <DashboardStats key={k} {...d} colorIndex={k} />
@@ -306,7 +395,7 @@ function Dashboard() {
           onClose={() => setIsModalOpen(false)} // Cerrar modal
         >
           <DataTable
-            data={selectedData} // Datos formateados
+            data={modalData} // Datos formateados
             columns={[
               { label: "#IDTRA", key: "idtra" },
               { label: "Nombre Cliente", key: "nombreCliente" },

@@ -44,6 +44,8 @@ function Leads() {
     "new_permisos",
     "new_borradordeimpuestos",
     "new_documentodenacionalizacion",
+    "new_borradordecertificadodeorigen",
+    "new_traducciondefacturas",
   ];
 
   const fetchLeads = async (filterValue, textValue) => {
@@ -308,6 +310,8 @@ function Leads() {
               <option value="4">Factura</option>
               <option value="5">PO</option>
               <option value="6">IDTRA</option>
+              <option value="7">Pedimentador</option>
+              <option value="8">Recibo</option>
             </select>
             <input
               type="text"
