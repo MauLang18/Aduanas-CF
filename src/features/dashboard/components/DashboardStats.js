@@ -19,11 +19,11 @@ const DashboardStats = ({
 
   return (
     <div
-      className="stats shadow"
+      className="stats shadow flex flex-col items-center justify-center"
       onClick={onClick}
       style={{ cursor: "pointer" }}
     >
-      <div className="stat">
+      <div className="stat text-center">
         <div
           className={`stat-figure dark:text-slate-300 text-${
             COLORS[colorIndex % 2]

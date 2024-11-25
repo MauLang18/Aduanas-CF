@@ -12,6 +12,7 @@ import statusMapping from "../../data/status.json";
 import cantEquipoMapping from "../../data/cantEquipo.json";
 import tamanoEquipoMapping from "../../data/tamanoEquipo.json";
 import ejecutivoMapping from "../../data/ejecutivo.json";
+import LeadDocument from "./components/LeadDocument";
 
 function Leads() {
   const [leads, setLeads] = useState([]);
@@ -19,7 +20,7 @@ function Leads() {
   const [textFilter, setTextFilter] = useState("");
   const [comments, setComments] = useState({});
   const [documents, setDocuments] = useState({});
-  const [selectedDocument, setSelectedDocument] = useState(null);
+  const [modalContent, setModalContent] = useState(null);
   const [isModalOpen, setModalOpen] = useState(false);
   const [fields, setFields] = useState({
     new_numerorecibo: "",
@@ -80,6 +81,9 @@ function Leads() {
             new_borradordeimpuestos: lead.new_borradordeimpuestos || null,
             new_documentodenacionalizacion:
               lead.new_documentodenacionalizacion || null,
+            new_borradordecertificadodeorigen:
+              lead.new_borradordecertificadodeorigen || null,
+            new_traducciondefacturas: lead.new_traducciondefacturas || null,
           };
           return acc;
         }, {});
@@ -156,9 +160,21 @@ function Leads() {
     }
   };
 
-  const handleDocumentClick = (url) => {
-    setSelectedDocument(url);
+  const openDocumentModal = (url) => {
+    setModalContent(
+      <iframe src={url} title="Documento PDF" className="w-full h-96"></iframe>
+    );
     setModalOpen(true);
+  };
+
+  const openLeadModal = (lead) => {
+    setModalContent(<LeadDocument lead={lead} />);
+    setModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setModalContent(null);
+    setModalOpen(false);
   };
 
   const renderBooleanBadge = (value) => (
@@ -374,7 +390,11 @@ function Leads() {
             </thead>
             <tbody>
               {leads.map((lead) => (
-                <tr key={lead.incidentid}>
+                <tr
+                  key={lead.incidentid}
+                  onClick={() => openLeadModal(lead)}
+                  className="cursor-pointer"
+                >
                   {/* Datos existentes */}
                   <td>{lead.title}</td>
                   <td>
@@ -528,11 +548,12 @@ function Leads() {
                       {documents[lead.incidentid]?.[field] ? (
                         <button
                           className="btn btn-secondary"
-                          onClick={() =>
-                            handleDocumentClick(
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openDocumentModal(
                               documents[lead.incidentid][field]
-                            )
-                          }
+                            );
+                          }}
                         >
                           Ver
                         </button>
@@ -558,17 +579,12 @@ function Leads() {
         </div>
       </TitleCard>
 
-      {/* Modal para ver documentos */}
       {isModalOpen && (
         <div className="modal modal-open">
           <div className="modal-box z-50">
-            <iframe
-              src={selectedDocument}
-              title="Documento PDF"
-              className="w-full h-96"
-            ></iframe>
+            {modalContent}
             <div className="modal-action">
-              <button className="btn" onClick={() => setModalOpen(false)}>
+              <button className="btn" onClick={closeModal}>
                 Cerrar
               </button>
             </div>
