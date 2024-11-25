@@ -396,7 +396,9 @@ function Leads() {
                   className="cursor-pointer"
                 >
                   {/* Datos existentes */}
-                  <td>{lead.title}</td>
+                  <td className="text-blue-600 underline decoration-blue-600">
+                    {lead.title}
+                  </td>
                   <td>
                     <input
                       type="text"
@@ -581,7 +583,7 @@ function Leads() {
 
       {isModalOpen && (
         <div className="modal modal-open">
-          <div className="modal-box z-50">
+          <div className="modal-box w-11/12 max-w-5xl z-50">
             {modalContent}
             <div className="modal-action">
               <button className="btn" onClick={closeModal}>
