@@ -34,6 +34,7 @@ function Leads() {
 
   const documentFields = [
     "new_facturacomercial",
+    "new_traducciondefacturas",
     "new_listadeempaque",
     "new_draftbl",
     "new_bloriginal",
@@ -41,12 +42,11 @@ function Leads() {
     "new_cartadesglosecargos",
     "new_exoneracion",
     "new_certificadoorigen",
+    "new_borradordecertificadodeorigen",
     "new_certificadoreexportacion",
     "new_permisos",
     "new_borradordeimpuestos",
     "new_documentodenacionalizacion",
-    "new_borradordecertificadodeorigen",
-    "new_traducciondefacturas",
   ];
 
   const fetchLeads = async (filterValue, textValue) => {
@@ -390,13 +390,12 @@ function Leads() {
             </thead>
             <tbody>
               {leads.map((lead) => (
-                <tr
-                  key={lead.incidentid}
-                  onClick={() => openLeadModal(lead)}
-                  className="cursor-pointer"
-                >
+                <tr key={lead.incidentid} className="cursor-pointer">
                   {/* Datos existentes */}
-                  <td className="text-blue-600 underline decoration-blue-600">
+                  <td
+                    className="text-blue-600 underline decoration-blue-600"
+                    onClick={() => openLeadModal(lead)}
+                  >
                     {lead.title}
                   </td>
                   <td>
