@@ -353,6 +353,7 @@ function Leads() {
                 <th># Recibo</th>
                 <th>Nombre Pedimentador</th>
                 <th>Status</th>
+                <th>Fecha de Status</th>
                 <th>Cliente</th>
                 <th>Ejecutivo</th>
                 <th>Contenedor</th>
@@ -428,6 +429,11 @@ function Leads() {
                     />
                   </td>
                   <td>{getStatusName(lead.new_preestado2)}</td>
+                  <td>
+                    {lead.new_eta
+                      ? moment(lead.new_fechastatus).format("DD MMM YY")
+                      : "N/A"}
+                  </td>
                   <td>{lead._customerid_value}</td>
                   <td>{getEjecutivoName(lead.new_ejecutivocomercial)}</td>
                   <td>{lead.new_contenedor}</td>
