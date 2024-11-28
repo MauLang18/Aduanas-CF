@@ -174,13 +174,18 @@ function Leads() {
     }
 
     try {
+      // Crear un objeto FormData
+      const formData = new FormData();
+      formData.append("transInternacionalId", leadId);
+      formData.append("fieldName", fieldName);
+      formData.append("fileUrl", fileUrl);
+
       const response = await axios.patch(
-        `https://api.logisticacastrofallas.com/api/TransInternacional/RemoveFile`,
+        `http://localhost:5218/api/TransInternacional/RemoveFile`,
+        formData,
         {
-          data: {
-            transInternacionalId: leadId,
-            fieldName,
-            fileUrl,
+          headers: {
+            "Content-Type": "multipart/form-data",
           },
         }
       );
