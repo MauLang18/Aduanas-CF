@@ -160,6 +160,62 @@ function Leads() {
     }
   };
 
+  const handleFileDelete = async (leadId, fieldName) => {
+    const fileUrl = documents[leadId]?.[fieldName]; // Obtener la URL del archivo del estado local
+
+    if (!fileUrl) {
+      dispatch(
+        showNotification({
+          message: "No hay archivo para eliminar",
+          type: "warning",
+        })
+      );
+      return;
+    }
+
+    try {
+      const response = await axios.patch(
+        `https://api.logisticacastrofallas.com/api/TransInternacional/RemoveFile`,
+        {
+          data: {
+            transInternacionalId: leadId,
+            fieldName,
+            fileUrl,
+          },
+        }
+      );
+
+      if (response.data.isSuccess) {
+        dispatch(
+          showNotification({
+            message: "Archivo eliminado con éxito",
+            type: "success",
+          })
+        );
+
+        // Actualizar el estado local para reflejar la eliminación
+        setDocuments((prev) => ({
+          ...prev,
+          [leadId]: {
+            ...prev[leadId],
+            [fieldName]: null,
+          },
+        }));
+      } else {
+        dispatch(
+          showNotification({ message: response.data.message, type: "error" })
+        );
+      }
+    } catch (error) {
+      dispatch(
+        showNotification({
+          message: "Error al eliminar el archivo",
+          type: "error",
+        })
+      );
+    }
+  };
+
   const openDocumentModal = (url) => {
     setModalContent(
       <iframe src={url} title="Documento PDF" className="w-full h-96"></iframe>
@@ -553,18 +609,44 @@ function Leads() {
                   {documentFields.map((field) => (
                     <td key={field}>
                       {documents[lead.incidentid]?.[field] ? (
-                        <button
-                          className="btn btn-secondary"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            openDocumentModal(
-                              documents[lead.incidentid][field]
-                            );
-                          }}
-                        >
-                          Ver
-                        </button>
+                        <div className="flex flex-col space-y-2">
+                          {/* Botón para ver el archivo */}
+                          <button
+                            className="btn btn-secondary"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openDocumentModal(
+                                documents[lead.incidentid][field]
+                              );
+                            }}
+                          >
+                            Ver
+                          </button>
+                          {/* Botón para eliminar el archivo */}
+                          <button
+                            className="btn btn-error"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleFileDelete(lead.incidentid, field);
+                            }}
+                          >
+                            Eliminar
+                          </button>
+                          {/* Input para modificar el archivo */}
+                          <input
+                            type="file"
+                            accept=".pdf"
+                            onChange={(e) =>
+                              handleFileUpload(
+                                e.target.files[0],
+                                lead.incidentid,
+                                field
+                              )
+                            }
+                          />
+                        </div>
                       ) : (
+                        // Input para subir un archivo si no existe uno previamente
                         <input
                           type="file"
                           accept=".pdf"
