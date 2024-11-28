@@ -181,7 +181,7 @@ function Leads() {
       formData.append("fileUrl", fileUrl);
 
       const response = await axios.patch(
-        `http://localhost:5218/api/TransInternacional/RemoveFile`,
+        `https://api.logisticacastrofallas.com/api/TransInternacional/RemoveFile`,
         formData,
         {
           headers: {
