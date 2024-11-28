@@ -449,8 +449,8 @@ function Leads() {
                       : "N/A"}
                   </td>
                   <td>
-                    {lead.new_confirmacionzarpe
-                      ? moment(lead.new_confirmacionzarpe).format("DD MMM YY")
+                    {lead.new_confirmacinzarpe
+                      ? moment(lead.new_confirmacinzarpe).format("DD MMM YY")
                       : "N/A"}
                   </td>
                   <td>{getCantEquipoName(lead.new_cantequipo)}</td>

@@ -104,7 +104,7 @@ const LeadDocument = ({ lead }) => {
             </li>
             <li>
               <strong>Confirmación Zarpe:</strong>{" "}
-              {moment(lead.new_confirmacionzarpe).format("DD MMM YY") ||
+              {moment(lead.new_confirmacinzarpe).format("DD MMM YY") ||
                 "PENDIENTE"}
             </li>
             <li>
