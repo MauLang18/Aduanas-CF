@@ -88,10 +88,25 @@ function Leads() {
           return acc;
         }, {});
 
+        const newFields = leadsData.reduce((acc, lead) => {
+          acc[lead.incidentid] = {
+            new_numerorecibo: lead.new_numerorecibo || "",
+            new_nombrepedimentador: lead.new_nombrepedimentador || "",
+            new_duaanticipados: lead.new_duaanticipados || "",
+            new_duanacional: lead.new_duanacional || "",
+            new_tipoaforo: lead.new_tipoaforo || "",
+          };
+          return acc;
+        }, {});
+
         // Actualizar los estados
         setComments(initialComments);
         setDocuments(initialDocuments); // Establecer los documentos
         setLeads(leadsData);
+        setFields((prevFields) => ({
+          ...prevFields,
+          ...newFields, // Combina los nuevos campos con los existentes
+        }));
       } else {
         dispatch(showNotification({ message: data.message, type: "error" }));
       }
@@ -104,13 +119,16 @@ function Leads() {
 
   useEffect(() => {
     if (selectedLead) {
-      setFields({
-        new_numerorecibo: selectedLead.new_numerorecibo || "",
-        new_nombrepedimentador: selectedLead.new_nombrepedimentador || "",
-        new_duaanticipados: selectedLead.new_duaanticipados || "",
-        new_duanacional: selectedLead.new_duanacional || "",
-        new_tipoaforo: selectedLead.new_tipoaforo || "",
-      });
+      setFields((prevFields) => ({
+        ...prevFields,
+        [selectedLead.incidentid]: {
+          new_numerorecibo: selectedLead.new_numerorecibo || "",
+          new_nombrepedimentador: selectedLead.new_nombrepedimentador || "",
+          new_duaanticipados: selectedLead.new_duaanticipados || "",
+          new_duanacional: selectedLead.new_duanacional || "",
+          new_tipoaforo: selectedLead.new_tipoaforo || "",
+        },
+      }));
     }
   }, [selectedLead]);
 
@@ -263,7 +281,7 @@ function Leads() {
         "https://api.logisticacastrofallas.com/api/TransInternacional/Agregar",
         {
           transInternacionalId: id,
-          field: "new_observacionesgenerales",
+          fieldName: "new_observacionesgenerales",
           comentario,
         }
       );
@@ -287,23 +305,26 @@ function Leads() {
     }
   };
 
-  const handleFieldChange = (e, fieldName) => {
+  const handleFieldChange = (e, fieldName, incidentid) => {
     const { value } = e.target;
     setFields((prevFields) => ({
       ...prevFields,
-      [fieldName]: value,
+      [incidentid]: {
+        ...prevFields[incidentid],
+        [fieldName]: value,
+      },
     }));
   };
 
-  const handleFieldBlur = async (fieldName, id) => {
-    const value = fields[fieldName];
+  const handleFieldBlur = async (fieldName, incidentid) => {
+    const value = fields[incidentid]?.[fieldName]; // Obtener el valor específico del campo
     try {
       const response = await axios.patch(
         "https://api.logisticacastrofallas.com/api/TransInternacional/Agregar",
         {
-          transInternacionalId: id,
-          field: fieldName,
-          value,
+          transInternacionalId: incidentid,
+          fieldName: fieldName,
+          comentario: value,
         }
       );
 
@@ -463,8 +484,14 @@ function Leads() {
                   <td>
                     <input
                       type="text"
-                      value={fields.new_numerorecibo}
-                      onChange={(e) => handleFieldChange(e, "new_numerorecibo")}
+                      value={fields[lead.incidentid]?.new_numerorecibo || ""}
+                      onChange={(e) =>
+                        handleFieldChange(
+                          e,
+                          "new_numerorecibo",
+                          lead.incidentid
+                        )
+                      }
                       onBlur={() =>
                         handleFieldBlur("new_numerorecibo", lead.incidentid)
                       }
@@ -475,9 +502,15 @@ function Leads() {
                   <td>
                     <input
                       type="text"
-                      value={fields.new_nombrepedimentador}
+                      value={
+                        fields[lead.incidentid]?.new_nombrepedimentador || ""
+                      }
                       onChange={(e) =>
-                        handleFieldChange(e, "new_nombrepedimentador")
+                        handleFieldChange(
+                          e,
+                          "new_nombrepedimentador",
+                          lead.incidentid
+                        )
                       }
                       onBlur={() =>
                         handleFieldBlur(
@@ -520,12 +553,15 @@ function Leads() {
                   <td>{lead.new_peso}</td>
                   <td>
                     <select
-                      value={fields.new_tipoaforo}
-                      onChange={(e) => handleFieldChange(e, "new_tipoaforo")}
+                      type="text"
+                      value={fields[lead.incidentid]?.new_tipoaforo || ""}
+                      onChange={(e) =>
+                        handleFieldChange(e, "new_tipoaforo", lead.incidentid)
+                      }
                       onBlur={() =>
                         handleFieldBlur("new_tipoaforo", lead.incidentid)
                       }
-                      className="select select-primary"
+                      className="input input-primary"
                     >
                       <option value="">Seleccione...</option>
                       <option value="100000000">Verde</option>
@@ -536,9 +572,13 @@ function Leads() {
                   <td>
                     <input
                       type="text"
-                      value={fields.new_duaanticipados}
+                      value={fields[lead.incidentid]?.new_duaanticipados || ""}
                       onChange={(e) =>
-                        handleFieldChange(e, "new_duaanticipados")
+                        handleFieldChange(
+                          e,
+                          "new_duaanticipados",
+                          lead.incidentid
+                        )
                       }
                       onBlur={() =>
                         handleFieldBlur("new_duaanticipados", lead.incidentid)
@@ -550,8 +590,10 @@ function Leads() {
                   <td>
                     <input
                       type="text"
-                      value={fields.new_duanacional}
-                      onChange={(e) => handleFieldChange(e, "new_duanacional")}
+                      value={fields[lead.incidentid]?.new_duanacional || ""}
+                      onChange={(e) =>
+                        handleFieldChange(e, "new_duanacional", lead.incidentid)
+                      }
                       onBlur={() =>
                         handleFieldBlur("new_duanacional", lead.incidentid)
                       }
