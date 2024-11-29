@@ -41,8 +41,8 @@ function Leads() {
     "new_cartatrazabilidad",
     "new_cartadesglosecargos",
     "new_exoneracion",
-    "new_certificadoorigen",
     "new_borradordecertificadodeorigen",
+    "new_certificadoorigen",
     "new_certificadoreexportacion",
     "new_permisos",
     "new_borradordeimpuestos",
@@ -434,6 +434,7 @@ function Leads() {
                 <th>IDTRA</th>
                 <th># Recibo</th>
                 <th>Nombre Pedimentador</th>
+                <th>Comentario</th>
                 <th>Status</th>
                 <th>Fecha de Status</th>
                 <th>Cliente</th>
@@ -464,7 +465,6 @@ function Leads() {
                 <th>Entrega de Traducción</th>
                 <th>Liberación Documental</th>
                 <th>Liberación Financiera</th>
-                <th>Comentario</th>
                 {/* Nuevas columnas */}
                 {documentFields.map((field) => (
                   <th key={field}>{field.replace("new_", "").toUpperCase()}</th>
@@ -521,6 +521,15 @@ function Leads() {
                       placeholder="Nombre Pedimentador"
                       className="input input-primary"
                     />
+                  </td>
+                  <td>
+                    <textarea
+                      value={comments[lead.incidentid] || ""}
+                      onChange={(e) => handleCommentChange(e, lead.incidentid)}
+                      onBlur={() => handleCommentBlur(lead.incidentid)}
+                      placeholder="Agrega un comentario"
+                      className="textarea textarea-primary"
+                    ></textarea>
                   </td>
                   <td>{getStatusName(lead.new_preestado2)}</td>
                   <td>
@@ -642,15 +651,6 @@ function Leads() {
                           "DD MMM YY"
                         )
                       : "N/A"}
-                  </td>
-                  <td>
-                    <textarea
-                      value={comments[lead.incidentid] || ""}
-                      onChange={(e) => handleCommentChange(e, lead.incidentid)}
-                      onBlur={() => handleCommentBlur(lead.incidentid)}
-                      placeholder="Agrega un comentario"
-                      className="textarea textarea-primary"
-                    ></textarea>
                   </td>
                   {/* Nuevas columnas */}
                   {documentFields.map((field) => (
