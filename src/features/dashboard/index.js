@@ -308,7 +308,7 @@ function Dashboard() {
             title: "Cargas en Tránsito (Hoy)",
             value: categoryStats.enTransito.today || 0,
             icon: <CircleStackIcon className="w-8 h-8 text-red-500" />,
-            onClick: () => handleCategoryClick("enTransito", "day"),
+            onClick: () => handleCategoryClick("enTransito", "today"),
           },
           {
             title: "Cargas en Tránsito (Semana)",
